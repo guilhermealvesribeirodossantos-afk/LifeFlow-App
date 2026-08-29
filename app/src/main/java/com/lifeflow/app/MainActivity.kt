@@ -1,275 +1,193 @@
 package com.lifeflow.app
 
-import android.annotation.SuppressLint
 import android.app.Activity
-import android.graphics.Color
+import android.content.ComponentName
+import android.net.Uri
 import android.os.Bundle
-import android.view.View
-import android.webkit.WebChromeClient
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import androidx.browser.customtabs.CustomTabsClient
+import androidx.browser.customtabs.CustomTabsServiceConnection
+import androidx.browser.customtabs.CustomTabsSession
+import androidx.browser.trusted.TrustedWebActivityIntentBuilder
 
 class MainActivity : Activity() {
 
-    private lateinit var webView: WebView
+    private val lifeFlowUrl =
+        "https://guilhermealvesribeirodossantos-afk.github.io/LifeFlow/"
 
-    @SuppressLint("SetJavaScriptEnabled")
+    private var launched = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        webView = WebView(this)
+        openLifeFlow()
+    }
 
-        webView.setBackgroundColor(
-            Color.rgb(3, 5, 4)
-        )
+    private fun openLifeFlow() {
 
-        /*
-         * IMPORTANTE:
-         * Software rendering para evitar flicker
-         * causado pelo compositor gráfico do WebView.
-         */
-        webView.setLayerType(
-            View.LAYER_TYPE_SOFTWARE,
-            null
-        )
+        val packageName =
+            CustomTabsClient.getPackageName(
+                this,
+                null
+            )
 
-        webView.overScrollMode =
-            View.OVER_SCROLL_NEVER
+        if (packageName == null) {
+            openFallback()
+            return
+        }
 
-        webView.isVerticalScrollBarEnabled =
-            false
+        val connection =
+            object : CustomTabsServiceConnection() {
 
-        webView.isHorizontalScrollBarEnabled =
-            false
-
-        setContentView(webView)
-
-        val settings: WebSettings =
-            webView.settings
-
-        settings.javaScriptEnabled = true
-        settings.domStorageEnabled = true
-        settings.databaseEnabled = true
-
-        settings.allowFileAccess = true
-        settings.allowContentAccess = true
-
-        settings.cacheMode =
-            WebSettings.LOAD_DEFAULT
-
-        settings.useWideViewPort = true
-        settings.loadWithOverviewMode = false
-
-        settings.setSupportZoom(false)
-        settings.builtInZoomControls = false
-        settings.displayZoomControls = false
-
-        settings.mediaPlaybackRequiresUserGesture =
-            false
-
-        webView.webChromeClient =
-            WebChromeClient()
-
-        webView.webViewClient =
-            object : WebViewClient() {
-
-                override fun onPageFinished(
-                    view: WebView?,
-                    url: String?
+                override fun onCustomTabsServiceConnected(
+                    name: ComponentName,
+                    client: CustomTabsClient
                 ) {
-                    super.onPageFinished(
-                        view,
-                        url
-                    )
 
-                    activateAndroidStableMode(
-                        view
-                    )
+                    client.warmup(0L)
+
+                    val session =
+                        client.newSession(null)
+
+                    if (session != null) {
+
+                        launchTrustedApp(
+                            session
+                        )
+
+                    } else {
+
+                        openFallback()
+                    }
+                }
+
+                override fun onServiceDisconnected(
+                    name: ComponentName
+                ) {
+                    // Nenhuma ação necessária.
                 }
             }
 
-        if (savedInstanceState == null) {
-
-            webView.loadUrl(
-                "https://guilhermealvesribeirodossantos-afk.github.io/LifeFlow/"
+        val connected =
+            CustomTabsClient.bindCustomTabsService(
+                this,
+                packageName,
+                connection
             )
 
-        } else {
-
-            webView.restoreState(
-                savedInstanceState
-            )
+        if (!connected) {
+            openFallback()
         }
     }
 
-    private fun activateAndroidStableMode(
-        view: WebView?
+    private fun launchTrustedApp(
+        session: CustomTabsSession
     ) {
 
-        val script = """
-            (function () {
+        if (launched) return
 
-                if (
-                    document.getElementById(
-                        'lifeflow-android-stable-v2'
-                    )
+        launched = true
+
+        val uri =
+            Uri.parse(
+                lifeFlowUrl
+            )
+
+        val twaIntent =
+            TrustedWebActivityIntentBuilder(
+                uri
+            )
+                .build(
+                    session
+                )
+
+        twaIntent.launchTrustedWebActivity(
+            this
+        )
+    }
+
+    private fun openFallback() {
+
+        if (launched) return
+
+        launched = true
+
+        val uri =
+            Uri.parse(
+                lifeFlowUrl
+            )
+
+        val packageName =
+            CustomTabsClient.getPackageName(
+                this,
+                null
+            )
+
+        val connection =
+            object : CustomTabsServiceConnection() {
+
+                override fun onCustomTabsServiceConnected(
+                    name: ComponentName,
+                    client: CustomTabsClient
                 ) {
-                    return;
+
+                    client.warmup(0L)
+
+                    val session =
+                        client.newSession(null)
+
+                    if (session != null) {
+
+                        val intent =
+                            androidx.browser.customtabs
+                                .CustomTabsIntent
+                                .Builder(session)
+                                .build()
+
+                        intent.launchUrl(
+                            this@MainActivity,
+                            uri
+                        )
+
+                    } else {
+
+                        openBrowserDirectly()
+                    }
                 }
 
-                document.documentElement.classList.add(
-                    'lifeflow-android-app'
-                );
+                override fun onServiceDisconnected(
+                    name: ComponentName
+                ) {
+                }
+            }
 
-                const style =
-                    document.createElement('style');
-
-                style.id =
-                    'lifeflow-android-stable-v2';
-
-                style.innerHTML = `
-
-                    html,
-                    body {
-                        background:
-                            #030504 !important;
-
-                        overscroll-behavior:
-                            none !important;
-                    }
-
-                    * {
-                        -webkit-tap-highlight-color:
-                            transparent !important;
-
-                        backdrop-filter:
-                            none !important;
-
-                        -webkit-backdrop-filter:
-                            none !important;
-
-                        filter:
-                            none !important;
-
-                        will-change:
-                            auto !important;
-                    }
-
-                    *::before,
-                    *::after {
-                        backdrop-filter:
-                            none !important;
-
-                        -webkit-backdrop-filter:
-                            none !important;
-
-                        filter:
-                            none !important;
-
-                        will-change:
-                            auto !important;
-                    }
-
-                    [class*="orb"],
-                    [class*="ambient"],
-                    [class*="noise"] {
-                        display:
-                            none !important;
-                    }
-
-                    html.lifeflow-android-app *,
-                    html.lifeflow-android-app *::before,
-                    html.lifeflow-android-app *::after {
-                        animation:
-                            none !important;
-
-                        transition:
-                            none !important;
-                    }
-
-                    #lifeflowDrawer {
-                        background:
-                            #050907 !important;
-                    }
-
-                    .bottom-nav {
-                        background:
-                            #050806 !important;
-                    }
-
-                    .premium-card,
-                    .task,
-                    .lf61-cockpit-hero,
-                    .lf64-quick-hub button,
-                    .lf65-weekly {
-
-                        background-color:
-                            #080c09 !important;
-                    }
-
-                    body {
-                        -webkit-font-smoothing:
-                            antialiased !important;
-
-                        text-rendering:
-                            optimizeLegibility !important;
-                    }
-                `;
-
-                document.head.appendChild(
-                    style
-                );
-
-            })();
-        """.trimIndent()
-
-        view?.evaluateJavascript(
-            script,
-            null
-        )
-    }
-
-    override fun onSaveInstanceState(
-        outState: Bundle
-    ) {
-
-        webView.saveState(
-            outState
-        )
-
-        super.onSaveInstanceState(
-            outState
-        )
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-
-        if (webView.canGoBack()) {
-
-            webView.goBack()
-
-        } else {
-
-            super.onBackPressed()
+        if (
+            packageName == null ||
+            !CustomTabsClient.bindCustomTabsService(
+                this,
+                packageName,
+                connection
+            )
+        ) {
+            openBrowserDirectly()
         }
     }
 
-    override fun onDestroy() {
+    private fun openBrowserDirectly() {
 
-        webView.stopLoading()
+        val intent =
+            android.content.Intent(
+                android.content.Intent.ACTION_VIEW,
+                Uri.parse(lifeFlowUrl)
+            )
 
-        webView.loadUrl(
-            "about:blank"
-        )
+        startActivity(intent)
+    }
 
-        webView.clearHistory()
+    override fun onResume() {
+        super.onResume()
 
-        webView.removeAllViews()
-
-        webView.destroy()
-
-        super.onDestroy()
+        if (launched) {
+            // Mantemos a Activity leve.
+        }
     }
 }
