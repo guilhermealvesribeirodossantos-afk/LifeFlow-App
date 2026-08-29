@@ -5,6 +5,14 @@
     <uses-permission
         android:name="android.permission.INTERNET" />
 
+    <!-- Permite localizar navegadores que oferecem Custom Tabs -->
+    <queries>
+        <intent>
+            <action
+                android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
+    </queries>
+
     <application
         android:theme="@style/Theme.LifeFlow"
         android:label="LifeFlow"
@@ -21,31 +29,12 @@
             android:name=".MainActivity"
             android:exported="true">
 
-            <!-- Ícone do LifeFlow -->
             <intent-filter>
                 <action
                     android:name="android.intent.action.MAIN" />
 
                 <category
                     android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
-            <!-- Domínio oficial do LifeFlow -->
-            <intent-filter android:autoVerify="true">
-
-                <action
-                    android:name="android.intent.action.VIEW" />
-
-                <category
-                    android:name="android.intent.category.DEFAULT" />
-
-                <category
-                    android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:scheme="https"
-                    android:host="guilhermealvesribeirodossantos-afk.github.io" />
-
             </intent-filter>
 
         </activity>
