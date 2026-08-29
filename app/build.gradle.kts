@@ -11,8 +11,8 @@ android {
         applicationId = "com.lifeflow.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     compileOptions {
@@ -29,4 +29,8 @@ android {
             isMinifyEnabled = false
         }
     }
+}
+
+dependencies {
+    implementation("androidx.browser:browser:1.8.0")
 }
