@@ -20,23 +20,28 @@ class MainActivity : Activity() {
 
         webView = WebView(this)
 
-        // Fundo preto para evitar flashes brancos.
-        webView.setBackgroundColor(Color.rgb(3, 5, 4))
+        webView.setBackgroundColor(
+            Color.rgb(3, 5, 4)
+        )
 
-        // Força aceleração de hardware.
         webView.setLayerType(
             View.LAYER_TYPE_HARDWARE,
             null
         )
 
-        // Remove efeitos de rolagem que podem causar flashes.
-        webView.overScrollMode = View.OVER_SCROLL_NEVER
-        webView.isVerticalScrollBarEnabled = false
-        webView.isHorizontalScrollBarEnabled = false
+        webView.overScrollMode =
+            View.OVER_SCROLL_NEVER
+
+        webView.isVerticalScrollBarEnabled =
+            false
+
+        webView.isHorizontalScrollBarEnabled =
+            false
 
         setContentView(webView)
 
-        val settings: WebSettings = webView.settings
+        val settings: WebSettings =
+            webView.settings
 
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
@@ -45,7 +50,8 @@ class MainActivity : Activity() {
         settings.allowFileAccess = true
         settings.allowContentAccess = true
 
-        settings.cacheMode = WebSettings.LOAD_DEFAULT
+        settings.cacheMode =
+            WebSettings.LOAD_DEFAULT
 
         settings.useWideViewPort = true
         settings.loadWithOverviewMode = false
@@ -54,59 +60,27 @@ class MainActivity : Activity() {
         settings.builtInZoomControls = false
         settings.displayZoomControls = false
 
-        settings.mediaPlaybackRequiresUserGesture = false
+        settings.mediaPlaybackRequiresUserGesture =
+            false
 
-        webView.webChromeClient = WebChromeClient()
+        webView.webChromeClient =
+            WebChromeClient()
 
-        webView.webViewClient = object : WebViewClient() {
+        webView.webViewClient =
+            object : WebViewClient() {
 
-            override fun onPageFinished(
-                view: WebView?,
-                url: String?
-            ) {
-                super.onPageFinished(view, url)
+                override fun onPageFinished(
+                    view: WebView?,
+                    url: String?
+                ) {
+                    super.onPageFinished(
+                        view,
+                        url
+                    )
 
-                // Evita flashes provocados pelo redesenho de elementos
-                // com blur/backdrop-filter dentro do Android WebView.
-                view?.evaluateJavascript(
-                    """
-                    (function() {
-                        if (
-                            document.getElementById(
-                                'lifeflow-android-stability'
-                            )
-                        ) return;
-
-                        const style =
-                            document.createElement('style');
-
-                        style.id =
-                            'lifeflow-android-stability';
-
-                        style.innerHTML = `
-                            html,
-                            body {
-                                background: #030504 !important;
-                            }
-
-                            * {
-                                -webkit-tap-highlight-color:
-                                    transparent !important;
-                            }
-
-                            body {
-                                -webkit-overflow-scrolling:
-                                    touch;
-                            }
-                        `;
-
-                        document.head.appendChild(style);
-                    })();
-                    """.trimIndent(),
-                    null
-                )
+                    activateAndroidMode(view)
+                }
             }
-        }
 
         if (savedInstanceState == null) {
 
@@ -116,43 +90,198 @@ class MainActivity : Activity() {
 
         } else {
 
-            webView.restoreState(savedInstanceState)
-
+            webView.restoreState(
+                savedInstanceState
+            )
         }
+    }
+
+    private fun activateAndroidMode(
+        view: WebView?
+    ) {
+
+        val script = """
+            (function () {
+
+                if (
+                    document.getElementById(
+                        'lifeflow-android-mode'
+                    )
+                ) {
+                    return;
+                }
+
+                document.documentElement
+                    .classList
+                    .add('lifeflow-android-app');
+
+                const style =
+                    document.createElement('style');
+
+                style.id =
+                    'lifeflow-android-mode';
+
+                style.innerHTML = `
+
+                    html,
+                    body {
+                        background:
+                            #030504 !important;
+
+                        overscroll-behavior:
+                            none !important;
+                    }
+
+                    * {
+                        -webkit-tap-highlight-color:
+                            transparent !important;
+                    }
+
+                    .lifeflow-android-app *,
+                    .lifeflow-android-app *::before,
+                    .lifeflow-android-app *::after {
+
+                        backdrop-filter:
+                            none !important;
+
+                        -webkit-backdrop-filter:
+                            none !important;
+                    }
+
+                    .lifeflow-android-app
+                    [class*="orb"],
+
+                    .lifeflow-android-app
+                    [class*="ambient"],
+
+                    .lifeflow-android-app
+                    [class*="noise"],
+
+                    .lifeflow-android-app
+                    [class*="glow"] {
+
+                        animation:
+                            none !important;
+                    }
+
+                    .lifeflow-android-app
+                    .premium-card,
+
+                    .lifeflow-android-app
+                    .lf61-cockpit-hero,
+
+                    .lifeflow-android-app
+                    .task,
+
+                    .lifeflow-android-app
+                    .lf64-quick-hub button,
+
+                    .lifeflow-android-app
+                    .lf65-weekly {
+
+                        backdrop-filter:
+                            none !important;
+
+                        -webkit-backdrop-filter:
+                            none !important;
+                    }
+
+                    .lifeflow-android-app
+                    #lifeflowDrawer {
+
+                        backdrop-filter:
+                            none !important;
+
+                        -webkit-backdrop-filter:
+                            none !important;
+
+                        background:
+                            #050907 !important;
+                    }
+
+                    .lifeflow-android-app
+                    .bottom-nav {
+
+                        backdrop-filter:
+                            none !important;
+
+                        -webkit-backdrop-filter:
+                            none !important;
+
+                        background:
+                            rgba(
+                                3,
+                                6,
+                                4,
+                                0.98
+                            ) !important;
+                    }
+
+                    .lifeflow-android-app
+                    * {
+
+                        text-rendering:
+                            optimizeLegibility;
+
+                        -webkit-font-smoothing:
+                            antialiased;
+                    }
+                `;
+
+                document.head.appendChild(
+                    style
+                );
+
+            })();
+        """.trimIndent()
+
+        view?.evaluateJavascript(
+            script,
+            null
+        )
     }
 
     override fun onSaveInstanceState(
         outState: Bundle
     ) {
-        webView.saveState(outState)
-        super.onSaveInstanceState(outState)
+
+        webView.saveState(
+            outState
+        )
+
+        super.onSaveInstanceState(
+            outState
+        )
     }
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
 
-        if (webView.canGoBack()) {
+        if (
+            webView.canGoBack()
+        ) {
 
             webView.goBack()
 
         } else {
 
             super.onBackPressed()
-
         }
     }
 
     override fun onDestroy() {
 
-        webView.apply {
+        webView.stopLoading()
 
-            stopLoading()
-            loadUrl("about:blank")
-            clearHistory()
-            removeAllViews()
-            destroy()
+        webView.loadUrl(
+            "about:blank"
+        )
 
-        }
+        webView.clearHistory()
+
+        webView.removeAllViews()
+
+        webView.destroy()
 
         super.onDestroy()
     }
