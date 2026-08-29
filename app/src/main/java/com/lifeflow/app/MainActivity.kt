@@ -24,8 +24,13 @@ class MainActivity : Activity() {
             Color.rgb(3, 5, 4)
         )
 
+        /*
+         * IMPORTANTE:
+         * Software rendering para evitar flicker
+         * causado pelo compositor gráfico do WebView.
+         */
         webView.setLayerType(
-            View.LAYER_TYPE_HARDWARE,
+            View.LAYER_TYPE_SOFTWARE,
             null
         )
 
@@ -78,7 +83,9 @@ class MainActivity : Activity() {
                         url
                     )
 
-                    activateAndroidMode(view)
+                    activateAndroidStableMode(
+                        view
+                    )
                 }
             }
 
@@ -96,7 +103,7 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun activateAndroidMode(
+    private fun activateAndroidStableMode(
         view: WebView?
     ) {
 
@@ -105,21 +112,21 @@ class MainActivity : Activity() {
 
                 if (
                     document.getElementById(
-                        'lifeflow-android-mode'
+                        'lifeflow-android-stable-v2'
                     )
                 ) {
                     return;
                 }
 
-                document.documentElement
-                    .classList
-                    .add('lifeflow-android-app');
+                document.documentElement.classList.add(
+                    'lifeflow-android-app'
+                );
 
                 const style =
                     document.createElement('style');
 
                 style.id =
-                    'lifeflow-android-mode';
+                    'lifeflow-android-stable-v2';
 
                 style.innerHTML = `
 
@@ -135,96 +142,78 @@ class MainActivity : Activity() {
                     * {
                         -webkit-tap-highlight-color:
                             transparent !important;
-                    }
-
-                    .lifeflow-android-app *,
-                    .lifeflow-android-app *::before,
-                    .lifeflow-android-app *::after {
 
                         backdrop-filter:
                             none !important;
 
                         -webkit-backdrop-filter:
                             none !important;
+
+                        filter:
+                            none !important;
+
+                        will-change:
+                            auto !important;
                     }
 
-                    .lifeflow-android-app
+                    *::before,
+                    *::after {
+                        backdrop-filter:
+                            none !important;
+
+                        -webkit-backdrop-filter:
+                            none !important;
+
+                        filter:
+                            none !important;
+
+                        will-change:
+                            auto !important;
+                    }
+
                     [class*="orb"],
-
-                    .lifeflow-android-app
                     [class*="ambient"],
+                    [class*="noise"] {
+                        display:
+                            none !important;
+                    }
 
-                    .lifeflow-android-app
-                    [class*="noise"],
-
-                    .lifeflow-android-app
-                    [class*="glow"] {
-
+                    html.lifeflow-android-app *,
+                    html.lifeflow-android-app *::before,
+                    html.lifeflow-android-app *::after {
                         animation:
                             none !important;
-                    }
 
-                    .lifeflow-android-app
-                    .premium-card,
-
-                    .lifeflow-android-app
-                    .lf61-cockpit-hero,
-
-                    .lifeflow-android-app
-                    .task,
-
-                    .lifeflow-android-app
-                    .lf64-quick-hub button,
-
-                    .lifeflow-android-app
-                    .lf65-weekly {
-
-                        backdrop-filter:
-                            none !important;
-
-                        -webkit-backdrop-filter:
+                        transition:
                             none !important;
                     }
 
-                    .lifeflow-android-app
                     #lifeflowDrawer {
-
-                        backdrop-filter:
-                            none !important;
-
-                        -webkit-backdrop-filter:
-                            none !important;
-
                         background:
                             #050907 !important;
                     }
 
-                    .lifeflow-android-app
                     .bottom-nav {
-
-                        backdrop-filter:
-                            none !important;
-
-                        -webkit-backdrop-filter:
-                            none !important;
-
                         background:
-                            rgba(
-                                3,
-                                6,
-                                4,
-                                0.98
-                            ) !important;
+                            #050806 !important;
                     }
 
-                    .lifeflow-android-app
-                    * {
+                    .premium-card,
+                    .task,
+                    .lf61-cockpit-hero,
+                    .lf64-quick-hub button,
+                    .lf65-weekly {
+
+                        background-color:
+                            #080c09 !important;
+                    }
+
+                    body {
+                        -webkit-font-smoothing:
+                            antialiased !important;
 
                         text-rendering:
-                            optimizeLegibility;
-
-                        -webkit-font-smoothing:
-                            antialiased;
+                            optimizeLegibility !important;
                     }
                 `;
 
@@ -257,9 +246,7 @@ class MainActivity : Activity() {
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
 
-        if (
-            webView.canGoBack()
-        ) {
+        if (webView.canGoBack()) {
 
             webView.goBack()
 
